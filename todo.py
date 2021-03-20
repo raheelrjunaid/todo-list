@@ -8,9 +8,12 @@ json_file = 'data.json'
 clargs = argv[1:]
 
 def listTodos(data):
+    if len(data['todos']) == 0:
+        print('No todos')
+        return False
     for count, todo in enumerate(data['todos'], 1):
-        if todo['status'] == 'incomplete':
-            print("[ ]", str(count) + ":", todo['title'])
+        status = "x" if todo['status'] == 'complete' else ' '
+        print(f"[{status}]", str(count) + ":", todo['title'])
 
 def deleteTodo(data, todo_index):
     data['todos'].pop(todo_index - 1)
