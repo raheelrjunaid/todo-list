@@ -44,12 +44,19 @@ if len(clargs) >= 1:
             if action[0] == "d":
                 if action[1].isdigit():
                     pass
+
     if clargs[0] == '-d':
-        if clargs[1].isdigit:
+        if len(clargs) >= 2 and clargs[1].isdigit:
             with open(json_file) as outfile:
                 data = json.load(outfile)
             with open(json_file, 'w') as outfile:
                 json.dump(deleteTodo(data, int(clargs[1])), outfile, indent=2)
-else:
-    with open(json_file) as outfile:
-        listTodos(json.load(outfile))
+        else:
+            with open(json_file) as outfile:
+                data = json.load(outfile)
+                if listTodos(data):
+                    number = input("Which todo? ")
+                with open(json_file, 'w') as outfile:
+                    json.dump(deleteTodo(data, int(number)), outfile, indent=2)
+with open(json_file) as outfile:
+    listTodos(json.load(outfile))
