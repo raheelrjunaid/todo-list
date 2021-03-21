@@ -10,7 +10,6 @@ clargs = argv[1:] # All command-line-args except file name
 def listTodos(data):
     if len(data['todos']) == 0:
         print('No todos')
-        return False
     for count, todo in enumerate(data['todos'], 1):
 
         # Set the checkbox based on todo status
@@ -22,21 +21,25 @@ def listTodos(data):
 try:
     with open(json_file) as outfile:
         read = json.load(outfile)
-            
+
 # If the file doesn't exist or is empty
 # Create/write to file the default template
 except (json.decoder.JSONDecodeError, FileNotFoundError) as e:
     print("Error reading file: Creating base template (data.json)")
     with open(json_file, "w") as outfile:
-        json.dump({"todos": []}, outfile, indent=2)
         read = {"todos": []}
+        json.dump(read, outfile, indent=2)
 
 # If the user supplies a command line argument, go into write mode
 if len(clargs) >= 1:
     with open(json_file, 'w') as outfile:
-        deleteTodo = lambda todo_index: read['todos'].pop(todo_index - 1)
-
         # Catch any errors to prevent deletion of json_file contents
+        def editTodo(action, todo_index):
+            if action == "delete":
+                read['todos'].pop(todo_index - 1)
+            elif action == "complete" or action == "incomplete":
+                read['todos'][todo_index - 1]['status'] == action
+            return read
         try:
             write = lambda data: json.dump(data, outfile, indent=2)
 
@@ -60,13 +63,14 @@ if len(clargs) >= 1:
                 # Delete Todo
                 if clargs[0] == '-d':
                     listTodos(read)
-                    number = input("Which todo to delete? ")
-                    deleteTodo(int(number))
-
-                # Mark todo as complete
+                    number = int(input("Which todo to delete? "))
+                    read = editTodo("delete", number)
+                    listTodos(read)
                 elif clargs[0] == '-c':
                     listTodos(read)
-                    number = input("Which todo to complete? ")
+                    number = int(input("Which todo to complete? "))
+                    read = editTodo("complete", number)
+                    listTodos(read)
                 # TODO Mark todo as complete and then delete
             else:
                 print("Please add todo to proceed.")
@@ -76,10 +80,8 @@ if len(clargs) >= 1:
             print(e, "Invalid Option")
         except KeyboardInterrupt:
             print("\nExited Program, todos preserved")
-
-        # Any other exceptions
-        except Exception:
-            print(Exception, "\nFailed")
+        except Exception as e:
+            print(e, "\nFailed")
 
         # Always write the modified data to the file
         finally:
