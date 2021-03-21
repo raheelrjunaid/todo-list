@@ -38,7 +38,7 @@ if len(clargs) >= 1:
             if action == "delete":
                 read['todos'].pop(todo_index - 1)
             elif action == "complete" or action == "incomplete":
-                read['todos'][todo_index - 1]['status'] == action
+                read['todos'][todo_index - 1]["status"] = action
             return read
         try:
             write = lambda data: json.dump(data, outfile, indent=2)
@@ -57,20 +57,19 @@ if len(clargs) >= 1:
                 read['todos'].append(new_todo)
                 listTodos(read)
 
-            # Only execute if there are any todos
-            if len(read['todos']) > 0:
+            # Only execute if there are any todos and valid clargs
+            options = ['-d', '-c', '-ic']
+            if len(read['todos']) > 0 and clargs[0] in options:
                 # TODO Delete & complete multiple todos
                 # Delete Todo
+                listTodos(read)
                 if clargs[0] == '-d':
-                    listTodos(read)
                     number = int(input("Which todo to delete? "))
                     read = editTodo("delete", number)
-                    listTodos(read)
                 elif clargs[0] == '-c':
-                    listTodos(read)
                     number = int(input("Which todo to complete? "))
                     read = editTodo("complete", number)
-                    listTodos(read)
+                listTodos(read)
                 # TODO Mark todo as complete and then delete
             else:
                 print("Please add todo to proceed.")
