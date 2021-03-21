@@ -36,7 +36,22 @@ except (json.decoder.JSONDecodeError, FileNotFoundError) as e:
 # If the user supplies a command line argument, go into write mode
 if len(clargs) >= 1:
     with open(json_file, 'w') as outfile:
-        # TODO Split conditions into different functions
+
+        def numHandler(name):
+            num = input(f"Which todo to {name}? ")
+            if num.isdigit():
+                return int(num)
+            else:
+                list_of_todos = []
+                for char in num:
+                    if char.isdigit():
+                        list_of_todos.append(int(char))
+                if list_of_todos:
+                    return list_of_todos
+                else:
+                    raise ValueError
+
+        # Change todo attributes
         def editTodo(action, todo_index):
             todo = read['todos'][todo_index - 1]
             if action == "delete":
@@ -44,6 +59,7 @@ if len(clargs) >= 1:
             elif action == "complete" or action == "incomplete":
                 todo['status'] = action
             elif action == 'edit':
+                print("Editing todo:", todo_index)
                 options = ['flag', 'title']
                 for field_name in todo:
                     if field_name in options:
@@ -62,13 +78,13 @@ if len(clargs) >= 1:
         try:
             write = lambda data: json.dump(data, outfile, indent=2)
 
+            # TODO Add multiple todos
             # Create a new todo
             if "-n" in clargs:
                 new_todo = input("Add a new todo: ")
                 new_todo = {
                     "title": new_todo,
                     "date_created": str(datetime.now()),
-                    # TODO Add flag creation method
                     "flag": True if "-f" in clargs else False,
                     "status": "incomplete"
                 }
@@ -77,30 +93,29 @@ if len(clargs) >= 1:
                 listTodos(read)
 
             # Only execute if there are any todos and valid clargs
-            options = ['-d', '-c', '-ic', '-e']
+            options = {
+                '-d': "delete",
+                '-c': "complete",
+                '-ic': "incomplete",
+                '-e': "edit"
+            }
+
             if len(read['todos']) > 0 and clargs[0] in options:
-                # TODO Delete & complete multiple todos
                 listTodos(read)
-                if clargs[0] == '-d': # Delete todo
-                    number = int(input("Which todo to delete? "))
-                    read = editTodo("delete", number)
-                elif clargs[0] == '-c': # Complete todo
-                    number = int(input("Which todo to complete? "))
-                    read = editTodo("complete", number)
-                elif clargs[0] == '-ic': # Incomplete todo
-                    number = int(input("Which todo to incomplete? "))
-                    read = editTodo("incomplete", number)
-                elif clargs[0] == '-e': # Edit todo
-                    number = int(input("Which todo to edit? "))
-                    read = editTodo("edit", number)
+                word = options[clargs[0]]
+                todo_index = numHandler(word)
+                if isinstance(todo_index, int): # One todo
+                    read = editTodo(word, todo_index)
+                else: # List of todos
+                    for i in todo_index:
+                        read = editTodo(word, i)
                 listTodos(read)
-                # TODO Mark todo as complete and then delete
-            else:
+            elif clargs[0] in options:
                 print("Please add todo to proceed.")
 
         # If user provides non-int or out of range int
         except (ValueError, IndexError) as e:
-            print(e, "Invalid Option")
+            print(e, "\nInvalid Option")
         except KeyboardInterrupt:
             print("\nExited Program, todos preserved")
         except Exception as e:
