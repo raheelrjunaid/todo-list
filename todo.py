@@ -15,27 +15,19 @@ def listTodos(data):
         status = "[x]" if todo['status'] == 'complete' else '[ ]'
         print(status, str(count) + ":", todo['title'])
 
-def deleteTodo(todo_index):
-    # TODO Change reliance on global var
-    global read
-    read['todos'].pop(todo_index - 1)
-
 try:
     with open(json_file) as outfile:
         read = json.load(outfile)
             
-except json.decoder.JSONDecodeError:
-    read = {"todos": []}
-    print("JSONError: File is empty, creating base template.")
-
-except FileNotFoundError:
-    print("data.json not found, creating file")
+except (json.decoder.JSONDecodeError, FileNotFoundError) as e:
+    print("Error reading file: Creating base template (data.json)")
     with open(json_file, "w") as outfile:
         json.dump({"todos": []}, outfile, indent=2)
         read = {"todos": []}
 
 if len(clargs) >= 1:
     with open(json_file, 'w') as outfile:
+        deleteTodo = lambda todo_index: read['todos'].pop(todo_index - 1)
         try:
             write = lambda data: json.dump(data, outfile, indent=2)
             if "-n" in clargs:
@@ -68,7 +60,7 @@ if len(clargs) >= 1:
             print("\nExited Program, todos preserved")
         except Exception:
             print(Exception, "\nFailed")
-        # finally:
-        #     write(read)
+        finally:
+            write(read)
 else:
     listTodos(read)
