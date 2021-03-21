@@ -20,12 +20,19 @@ def deleteTodo(todo_index):
     global read
     read['todos'].pop(todo_index - 1)
 
-with open(json_file) as outfile:
-    try:
+try:
+    with open(json_file) as outfile:
         read = json.load(outfile)
-    except json.decoder.JSONDecodeError:
+            
+except json.decoder.JSONDecodeError:
+    read = {"todos": []}
+    print("JSONError: File is empty, creating base template.")
+
+except FileNotFoundError:
+    print("data.json not found, creating file")
+    with open(json_file, "w") as outfile:
+        json.dump({"todos": []}, outfile, indent=2)
         read = {"todos": []}
-        print("JSONError: File is empty, creating base template.")
 
 if len(clargs) >= 1:
     with open(json_file, 'w') as outfile:
@@ -61,7 +68,7 @@ if len(clargs) >= 1:
             print("\nExited Program, todos preserved")
         except Exception:
             print(Exception, "\nFailed")
-        finally:
-            write(read)
+        # finally:
+        #     write(read)
 else:
     listTodos(read)
