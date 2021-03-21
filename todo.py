@@ -16,7 +16,10 @@ def listTodos(data):
         status = "[x]" if todo['status'] == 'complete' else '[ ]'
 
         # Print name and number (for editing) of all todos
-        print(status, str(count) + ":", todo['title'])
+        if todo['flag']:
+            print(status, str(count) + ":", todo['title'], '\uf024')
+        else:
+            print(status, str(count) + ":", todo['title'])
 
 try:
     with open(json_file) as outfile:
@@ -33,6 +36,7 @@ except (json.decoder.JSONDecodeError, FileNotFoundError) as e:
 # If the user supplies a command line argument, go into write mode
 if len(clargs) >= 1:
     with open(json_file, 'w') as outfile:
+        # TODO Split conditions into different functions
         def editTodo(action, todo_index):
             todo = read['todos'][todo_index - 1]
             if action == "delete":
