@@ -16,6 +16,7 @@ def listTodos(data):
         status = "[x]" if todo['status'] == 'complete' else '[ ]'
 
         # Print name and number (for editing) of all todos
+        # Print flag if flagged
         if todo['flag']:
             print(status, str(count) + ":", todo['title'], '\uf024')
         else:
@@ -56,6 +57,8 @@ if len(clargs) >= 1:
             todo = read['todos'][todo_index - 1]
             if action == "delete":
                 read['todos'].pop(todo_index - 1)
+            elif action == 'deactivate':
+                todo['title'] = False
             elif action == "complete" or action == "incomplete":
                 todo['status'] = action
             elif action == 'edit':
@@ -102,14 +105,31 @@ if len(clargs) >= 1:
 
             if len(read['todos']) > 0 and clargs[0] in options:
                 listTodos(read)
+
+                # Word to be used in editTodo function
                 word = options[clargs[0]]
+
+                # Will either return and int or list
                 todo_index = numHandler(word)
+
                 if isinstance(todo_index, int): # One todo
                     read = editTodo(word, todo_index)
+
                 else: # List of todos
+
+                    # Set todos to deactivate when deleting multiple
+                    if word == 'delete':
+                        word = 'deactivate'
+
+                    # Iterate over action (word)
                     for i in todo_index:
                         read = editTodo(word, i)
+
+                    # Delete deactivated todos
+                    read['todos'] = [i for i in read['todos'] if i['title']]
+
                 listTodos(read)
+
             elif clargs[0] in options:
                 print("Please add todo to proceed.")
 
@@ -118,8 +138,6 @@ if len(clargs) >= 1:
             print(e, "\nInvalid Option")
         except KeyboardInterrupt:
             print("\nExited Program, todos preserved")
-        except Exception as e:
-            print(e, "\nFailed")
 
         # Always write the modified data to the file
         finally:
