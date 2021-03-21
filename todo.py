@@ -33,13 +33,28 @@ except (json.decoder.JSONDecodeError, FileNotFoundError) as e:
 # If the user supplies a command line argument, go into write mode
 if len(clargs) >= 1:
     with open(json_file, 'w') as outfile:
-        # Catch any errors to prevent deletion of json_file contents
         def editTodo(action, todo_index):
+            todo = read['todos'][todo_index - 1]
             if action == "delete":
                 read['todos'].pop(todo_index - 1)
             elif action == "complete" or action == "incomplete":
-                read['todos'][todo_index - 1]["status"] = action
+                todo['status'] = action
+            elif action == 'edit':
+                options = ['flag', 'title']
+                for field_name in todo:
+                    if field_name in options:
+                        print(field_name + ":", todo[field_name])
+
+                field = input("Field to change? ")
+                if field == "flag":
+                    todo['flag'] = False if todo['flag'] else True
+                elif field == 'title':
+                    todo['title'] = input("New title: ")
+                else:
+                    print('Not valid')
             return read
+
+        # Catch any errors to prevent deletion of json_file contents
         try:
             write = lambda data: json.dump(data, outfile, indent=2)
 
@@ -58,17 +73,22 @@ if len(clargs) >= 1:
                 listTodos(read)
 
             # Only execute if there are any todos and valid clargs
-            options = ['-d', '-c', '-ic']
+            options = ['-d', '-c', '-ic', '-e']
             if len(read['todos']) > 0 and clargs[0] in options:
                 # TODO Delete & complete multiple todos
-                # Delete Todo
                 listTodos(read)
-                if clargs[0] == '-d':
+                if clargs[0] == '-d': # Delete todo
                     number = int(input("Which todo to delete? "))
                     read = editTodo("delete", number)
-                elif clargs[0] == '-c':
+                elif clargs[0] == '-c': # Complete todo
                     number = int(input("Which todo to complete? "))
                     read = editTodo("complete", number)
+                elif clargs[0] == '-ic': # Incomplete todo
+                    number = int(input("Which todo to incomplete? "))
+                    read = editTodo("incomplete", number)
+                elif clargs[0] == '-e': # Edit todo
+                    number = int(input("Which todo to edit? "))
+                    read = editTodo("edit", number)
                 listTodos(read)
                 # TODO Mark todo as complete and then delete
             else:
