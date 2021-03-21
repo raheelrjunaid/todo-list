@@ -19,44 +19,35 @@ def deleteTodo(data, todo_index):
     data['todos'].pop(todo_index - 1)
     return data
 
+with open(json_file) as outfile:
+    read = json.load(outfile)
+
 if len(clargs) >= 1:
-    if "-n" in clargs:
-        new_todo = input("Add a new todo: ")
-        data = {
-            "title": new_todo,
-            "time": str(datetime.now()),
-            "flag": True if "-f" in clargs else False,
-            "status": "incomplete"
-        }
+    with open(json_file, 'w') as outfile:
+        write = lambda data: json.dump(data, outfile, indent=2)
+        if "-n" in clargs:
+            new_todo = input("Add a new todo: ")
+            new_todo = {
+                "title": new_todo,
+                "time": str(datetime.now()),
+                "flag": True if "-f" in clargs else False,
+                "status": "incomplete"
+            }
 
-        with open(json_file) as outfile:
-            current_data = json.load(outfile)
-            current_data['todos'].append(data)
-            listTodos(current_data)
+            read['todos'].append(new_todo)
+            listTodos(read)
+            write(read)
 
-        with open(json_file, 'w') as outfile:
-            json.dump(current_data, outfile, indent=2)
-
-    if clargs[0] == "-i":
-        with open(json_file) as outfile:
-            listTodos(json.load(outfile))
+        if clargs[0] == "-i":
+            listTodos(read)
             action = input("Action: ")
             if action[0] == "d":
                 if action[1].isdigit():
                     pass
 
-    if clargs[0] == '-d':
-        if len(clargs) >= 2 and clargs[1].isdigit:
-            with open(json_file) as outfile:
-                data = json.load(outfile)
-            with open(json_file, 'w') as outfile:
-                json.dump(deleteTodo(data, int(clargs[1])), outfile, indent=2)
-        else:
-            with open(json_file) as outfile:
-                data = json.load(outfile)
-                if listTodos(data):
-                    number = input("Which todo? ")
-                with open(json_file, 'w') as outfile:
-                    json.dump(deleteTodo(data, int(number)), outfile, indent=2)
-with open(json_file) as outfile:
-    listTodos(json.load(outfile))
+        if clargs[0] == '-d':
+            if clargs[1].isdigit():
+                write(deleteTodo(read, int(clargs[1])))
+            else:
+                number = input("Which todo? ")
+                write(deleteTodo(read, int(number)))
