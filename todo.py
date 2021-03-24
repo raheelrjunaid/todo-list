@@ -10,8 +10,12 @@ clargs = argv[1:] # All command-line-args except file name
 def listTodos(data):
     if len(data['todos']) == 0:
         print('No todos')
+    group = None
     for count, todo in enumerate(data['todos'], 1):
 
+        if todo['group'] != None and group != todo['group']:
+            group = todo['group']
+            print(group)
         # Set the checkbox based on todo status
         status = "[x]" if todo['status'] == 'complete' else '[ ]'
 
@@ -77,19 +81,19 @@ if len(clargs) >= 1:
                     print('Not valid')
             return read
 
-        # Catch any errors to prevent deletion of json_file contents
         try:
             write = lambda data: json.dump(data, outfile, indent=2)
 
-            # TODO Add multiple todos
             # Create a new todo
             if "-n" in clargs:
                 new_todo = input("Add a new todo: ")
+                group = input("Group (leave blank for none): ")
                 new_todo = {
                     "title": new_todo,
                     "date_created": str(datetime.now()),
                     "flag": True if "-f" in clargs else False,
-                    "status": "incomplete"
+                    "status": "incomplete",
+                    "group": group if group != '' else None
                 }
 
                 read['todos'].append(new_todo)
