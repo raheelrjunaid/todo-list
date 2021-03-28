@@ -59,9 +59,7 @@ if len(clargs) >= 1:
         # Change todo attributes
         def editTodo(action, todo_index):
             todo = read['todos'][todo_index - 1]
-            if action == "delete":
-                read['todos'].pop(todo_index - 1)
-            elif action == 'deactivate':
+            if action == 'delete':
                 todo['title'] = False
             elif action == "complete" or action == "incomplete":
                 todo['status'] = action
@@ -81,22 +79,23 @@ if len(clargs) >= 1:
                     print('Not valid')
             return read
 
+        def createTodo(title, group):
+            new_todo = {
+                "title": title,
+                "date_created": str(datetime.now()),
+                "flag": True if "-f" in clargs else False,
+                "status": "incomplete",
+                "group": group if group != '' else None
+            }
+            read['todos'].append(new_todo)
+            return read
+
         try:
             write = lambda data: json.dump(data, outfile, indent=2)
-
-            # Create a new todo
             if "-n" in clargs:
-                new_todo = input("Add a new todo: ")
+                title = input("Add a new todo: ")
                 group = input("Group (leave blank for none): ")
-                new_todo = {
-                    "title": new_todo,
-                    "date_created": str(datetime.now()),
-                    "flag": True if "-f" in clargs else False,
-                    "status": "incomplete",
-                    "group": group if group != '' else None
-                }
-
-                read['todos'].append(new_todo)
+                read = createTodo(title, group)
                 listTodos(read)
 
             # Only execute if there are any todos and valid clargs
@@ -106,30 +105,19 @@ if len(clargs) >= 1:
                 '-ic': "incomplete",
                 '-e': "edit"
             }
-
             if len(read['todos']) > 0 and clargs[0] in options:
                 listTodos(read)
 
                 # Word to be used in editTodo function
                 word = options[clargs[0]]
-
                 # Will either return and int or list
                 todo_index = numHandler(word)
-
                 if isinstance(todo_index, int): # One todo
                     read = editTodo(word, todo_index)
-
                 else: # List of todos
-
-                    # Set todos to deactivate when deleting multiple
-                    if word == 'delete':
-                        word = 'deactivate'
-
-                    # Iterate over action (word)
-                    for i in todo_index:
+                    for i in todo_index: # Iterate over action (word)
                         read = editTodo(word, i)
-
-                    # Delete deactivated todos
+                    # Delete deactivated (title=False) todos
                     read['todos'] = [i for i in read['todos'] if i['title']]
 
                 listTodos(read)
