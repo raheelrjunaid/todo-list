@@ -7,41 +7,61 @@ import json
 json_file = 'data.json' # The name of the json target file
 clargs = argv[1:] # All command-line-args except file name
 
-def listTodos(data):
-    if len(data['todos']) == 0:
-        print('No todos')
-    group = None
-    for count, todo in enumerate(data['todos'], 1):
-
-        if todo['group'] != None and group != todo['group']:
-            group = todo['group']
-            print(group)
-        # Set the checkbox based on todo status
-        status = "[x]" if todo['status'] == 'complete' else '[ ]'
-
-        # Print name and number (for editing) of all todos
-        # Print flag if flagged
-        if todo['flag']:
-            print(status, str(count) + ":", todo['title'], '\uf024')
-        else:
-            print(status, str(count) + ":", todo['title'])
-
 try:
     with open(json_file) as outfile:
         read = json.load(outfile)
-
-# If the file doesn't exist or is empty
-# Create/write to file the default template
+# If the file doesn't exist or is empty: write file the default template
 except (json.decoder.JSONDecodeError, FileNotFoundError) as e:
     print("Error reading file: Creating base template (data.json)")
     with open(json_file, "w") as outfile:
         read = {"todos": []}
         json.dump(read, outfile, indent=2)
 
+# TODO store read data in variable
+
+def todosExist(todos=read['todos']) -> bool:
+    if len(todos) == 0:
+        print("No todos")
+        return False
+    else:
+        return True
+
+def sortTodos(data=read):
+    todos = data['todos']
+    def getGroups():
+        groups = []
+        for todo in todos:
+            if todo['group'] not in groups:
+                groups.append(todo['group'])
+        return groups
+
+    if todosExist(todos):
+        sortedArray = []
+        for group in getGroups():
+            for todo in todos:
+                if todo['group'] == group:
+                    sortedArray.append(todo)
+        data['todos'] = sortedArray
+        return data
+
+def listTodos(todos=read['todos']):
+    if todosExist(todos):
+        group = None
+        for count, todo in enumerate(todos, 1):
+            if todo['group'] != None and group != todo['group']:
+                group = todo['group']
+                print(group)
+            # Set the checkbox based on todo status
+            status = "[x]" if todo['status'] == 'complete' else '[ ]'
+            if todo['flag']: # Print todo with flag icon if flagged
+                print(status, str(count) + ":", todo['title'], '\uf024')
+            else:
+                print(status, str(count) + ":", todo['title'])
+
+read = sortTodos()
 # If the user supplies a command line argument, go into write mode
 if len(clargs) >= 1:
     with open(json_file, 'w') as outfile:
-
         def numHandler(name):
             num = input(f"Which todo to {name}? ")
             if num.isdigit():
@@ -63,13 +83,14 @@ if len(clargs) >= 1:
                 todo['title'] = False
             elif action == "complete" or action == "incomplete":
                 todo['status'] = action
+            elif action == 'delete_all':
+                read['todos'] = []
             elif action == 'edit':
                 print("Editing todo:", todo_index)
                 options = ['flag', 'title']
                 for field_name in todo:
                     if field_name in options:
                         print(field_name + ":", todo[field_name])
-
                 field = input("Field to change? ")
                 if field == "flag":
                     todo['flag'] = False if todo['flag'] else True
@@ -95,19 +116,19 @@ if len(clargs) >= 1:
             if "-n" in clargs:
                 title = input("Add a new todo: ")
                 group = input("Group (leave blank for none): ")
-                read = createTodo(title, group)
-                listTodos(read)
-
-            # Only execute if there are any todos and valid clargs
+                read = sortTodos(createTodo(title, group))
+                listTodos()
             options = {
                 '-d': "delete",
+                '-da': "delete_all",
                 '-c': "complete",
                 '-ic': "incomplete",
                 '-e': "edit"
             }
-            if len(read['todos']) > 0 and clargs[0] in options:
-                listTodos(read)
 
+            # Only execute if there are any todos and valid clargs
+            if len(read['todos']) > 0 and clargs[0] in options:
+                listTodos()
                 # Word to be used in editTodo function
                 word = options[clargs[0]]
                 # Will either return and int or list
@@ -119,8 +140,7 @@ if len(clargs) >= 1:
                         read = editTodo(word, i)
                     # Delete deactivated (title=False) todos
                     read['todos'] = [i for i in read['todos'] if i['title']]
-
-                listTodos(read)
+                listTodos()
 
             elif clargs[0] in options:
                 print("Please add todo to proceed.")
@@ -137,4 +157,4 @@ if len(clargs) >= 1:
 
 # If there are no clargs, list all todos
 else:
-    listTodos(read)
+    listTodos()
